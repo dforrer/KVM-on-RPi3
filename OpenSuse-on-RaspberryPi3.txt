@@ -1,0 +1,89 @@
+OpenSuse on RPI3
+================
+
+$ diskutil unmountDisk /dev/disk3
+
+$ sudo dd bs=1m if=/Users/admin/openSUSE-Leap42.3-ARM-XFCE-raspberrypi3.aarch64-2017.07.26-Build1.1.raw of=/dev/rdisk3
+
+Put SDCard into RPI3
+
+Boot up RPI3
+
+Inside OpenSuse run:
+$ sudo zypper update
+$ sudo reboot
+
+$ sudo zypper install qemu-uefi-aarch64 libvirt virt-manager
+
+$ sudo service libvirtd restart
+
+$ wget https://downloads.raspberrypi.org/raspbian_lite_latest
+
+$ nano virt-install-cmd.sh
+$ chmod +x virt-install-cmd.sh
+$ nano virt-install-cmd.sh
+
+'''
+sudo virt-install \
+    --name Raspbian \
+    --arch aarch64 \
+    --cdrom /root/ubuntu-16.04.4-server-arm64.iso \
+    --boot cdrom \
+    --machine virt \
+    --ram 512 \
+    --vcpus 2 \
+    --debug \
+    --quiet \
+    --video virtio \
+    --graphics vnc,listen=0.0.0.0,keymap=de --noautoconsole \
+    --os-type linux \
+    --check path_in_use=off \
+    --disk size=8 \
+    --controller type=usb,model=ich9-ehci1 \
+    --input keyboard,bus=usb \
+    --network network=default,model=virtio,rom_bar=off
+'''
+
+Inside the Install Menu for Ubuntu, select the last option "Boot and Install with the HWE Kernel" 
+=================================================================================================
+
+http://cdimage.ubuntu.com/netboot/17.10/?_ga=2.125556170.1717327944.1523707862-2110945598.1513020656
+
+Changed Virtual Network Interface to "Host device eth0: macvtap - Source = Brdige" => WORKS!
+
+https://linux.die.net/man/1/virt-install
+
+[] Write Tutorial on how to install VMs on openSuSe
+[] Try Debian minimal install as VM Guest OS
+[] Add bridged Network to virt-install command
+[x] use bridge br0 instead of macvtap https://jamielinux.com/docs/libvirt-networking-handbook/bridged-network.html
+    https://doc.opensuse.org/documentation/leap/virtualization/html/book.virt/cha.libvirt.networks.html
+
+
+To get the internet working: edit /etc/resolv.conf
+https://www.suse.com/de-de/documentation/sles10/book_sle_reference/data/sec.basicnet.manconf.html
+
+https://en.opensuse.org/HCL:Raspberry_Pi3
+
+start from commandline:
+$ sudo service libvirtd restart
+$ virsh connect qemu:///system 
+$ virsh list --all
+$ virsh create ubuntu17-512.xml
+$ virsh start ubuntu17-512
+$ virsh console ubuntu17-512
+$ virsh snapshot-create-as ubuntu17-netboot-1 snapshot1 "My Snapshot" --disk-only --atomic
+$ virsh snapshot-info ubuntu17-netboot-1 --current
+$ virsh snapshot-info ubuntu17-netboot-1 snapshot1
+$ virsh snapshot-list ubuntu17-netboot-1
+
+https://www.jamescoyle.net/how-to/2096-use-a-file-as-a-linux-block-device
+
+use VirtIO instead of SCSI Disk => WORKS!
+=========================================
+
+1. virt-install --name=vm1 ...
+2. Continue installation:
+$ virt console vm1
+
+# exit remote console CTRL+! (key left of ENTER-key)
